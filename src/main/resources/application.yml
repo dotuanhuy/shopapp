@@ -1,0 +1,22 @@
+server:
+  port: 8088
+cloudinary:
+  name: dvukas8ib
+  api_key: 547683488563527
+  api_secret: 8W34Omrke3cg84K4ZrEQq_Vup9o
+api:
+  prefix: api/v1
+spring:
+  datasource:
+    url: jdbc:mysql://localhost:3306/db_app
+    username: root
+    password: 12345
+  jpa:
+    show-sql: true
+    hibernate:
+      ddl-auto: none
+    properties:
+      format_sql: true
+jwt:
+  expiration: 2592000 # 30 * 24 * 60 * 60 = 30 days
+  secretkey: G9SVJWnTXDZ6rpZw0BBRygsmk4DEqBBr1bBsAau2wHI=

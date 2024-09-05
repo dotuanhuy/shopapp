@@ -1,0 +1,20 @@
+package com.project.shopapp.dtos.responses;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
+import jakarta.persistence.Column;
+import lombok.*;
+
+import java.time.LocalDateTime;
+
+@Data
+@Getter
+@Setter
+@AllArgsConstructor
+@NoArgsConstructor
+public class BaseResponse {
+    @JsonProperty("created_at")
+    private LocalDateTime createAt;
+
+    @JsonProperty("updated_at")
+    private LocalDateTime updateAt;
+}
