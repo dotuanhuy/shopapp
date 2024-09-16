@@ -28,7 +28,6 @@ public class UserDTO {
     private String password;
 
     @JsonProperty("retype_password")
-
     private String retypePassword;
 
     @JsonProperty("date_of_birth")

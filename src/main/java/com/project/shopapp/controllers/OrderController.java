@@ -1,10 +1,13 @@
 package com.project.shopapp.controllers;
 
+import com.project.shopapp.components.LocalizationUtils;
 import com.project.shopapp.dtos.requests.OrderDTO;
 import com.project.shopapp.dtos.responses.OrderResponse;
 import com.project.shopapp.models.Order;
 import com.project.shopapp.services.OrderService;
+import com.project.shopapp.utils.MessageKeys;
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -16,10 +19,10 @@ import java.util.List;
 
 @RestController
 @RequestMapping(path = "${api.prefix}/orders")
+@RequiredArgsConstructor
 public class OrderController {
-
-    @Autowired
-    private OrderService orderService;
+    private final OrderService orderService;
+    private final LocalizationUtils localizationUtils;
 
     @PostMapping
     public ResponseEntity<?> createOrder(@Valid @RequestBody OrderDTO orderDTO, BindingResult result) {
@@ -83,7 +86,9 @@ public class OrderController {
         try {
             // Cập nhật trường active === false
             orderService.deleteOrder(id);
-            return ResponseEntity.status(HttpStatus.OK).body("delete order successfully");
+            return ResponseEntity.status(HttpStatus.OK).body(
+                    localizationUtils.getLocalizedMessage(MessageKeys.DELETE_ORDER_SUCCESSFULLY)
+            );
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
         }

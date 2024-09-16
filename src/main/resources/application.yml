@@ -17,6 +17,10 @@ spring:
       ddl-auto: none
     properties:
       format_sql: true
+    message:
+      basename: i18n/messages
+      encoding: UTF-8
+      default-locale: en
 jwt:
   expiration: 2592000 # 30 * 24 * 60 * 60 = 30 days
   secretkey: G9SVJWnTXDZ6rpZw0BBRygsmk4DEqBBr1bBsAau2wHI=

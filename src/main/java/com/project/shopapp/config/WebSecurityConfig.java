@@ -40,7 +40,7 @@ public class WebSecurityConfig {
                             )
                             .permitAll()
                             .requestMatchers(
-                                    HttpMethod.GET, String.format("%s/categories/**", apiPrefix)
+                                    HttpMethod.GET, String.format("%s/categories**", apiPrefix)
                             ).hasAnyRole(Role.USER, Role.ADMIN)
                             .requestMatchers(
                                     HttpMethod.POST, String.format("%s/categories/**", apiPrefix)
@@ -53,7 +53,7 @@ public class WebSecurityConfig {
                             ).hasRole(Role.ADMIN)
 
                             .requestMatchers(
-                                    HttpMethod.GET, String.format("%s/products/**", apiPrefix)
+                                    HttpMethod.GET, String.format("%s/products**", apiPrefix)
                             ).hasAnyRole(Role.USER, Role.ADMIN)
                             .requestMatchers(
                                     HttpMethod.POST, String.format("%s/products/**", apiPrefix)
@@ -66,7 +66,7 @@ public class WebSecurityConfig {
                             ).hasRole(Role.ADMIN)
 
                             .requestMatchers(
-                                    HttpMethod.GET, String.format("%s/orders/**", apiPrefix)
+                                    HttpMethod.GET, String.format("%s/orders**", apiPrefix)
                             ).hasAnyRole(Role.USER, Role.ADMIN)
                             .requestMatchers(
                                     HttpMethod.POST, String.format("%s/orders/**", apiPrefix)
@@ -77,6 +77,9 @@ public class WebSecurityConfig {
                             .requestMatchers(
                                     HttpMethod.DELETE, String.format("%s/orders/**", apiPrefix)
                             ).hasRole(Role.ADMIN)
+                            .requestMatchers(
+                                    HttpMethod.GET, String.format("%s/roles**", apiPrefix)
+                            ).permitAll()
                             .anyRequest()
                             .authenticated();
 

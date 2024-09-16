@@ -1,39 +1,51 @@
 package com.project.shopapp.controllers;
 
 import com.project.shopapp.dtos.requests.CategoryDTO;
+import com.project.shopapp.dtos.responses.CategoryResponse;
 import com.project.shopapp.models.Category;
 import com.project.shopapp.services.CategoryService;
+import com.project.shopapp.components.LocalizationUtils;
+import com.project.shopapp.utils.MessageKeys;
 import jakarta.validation.Valid;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.annotation.*;
-
 import java.util.List;
 
 @RestController
 @RequestMapping("${api.prefix}/categories")
+@RequiredArgsConstructor
 public class CategoryController {
-
-    @Autowired
-    private CategoryService categoryService;
+    private final CategoryService categoryService;
+    private final LocalizationUtils localizationUtils;
 
     @PostMapping
-    public ResponseEntity<?> createCategory(@Valid @RequestBody CategoryDTO categoryDTO, BindingResult result) {
+    public ResponseEntity<CategoryResponse> createCategory(@Valid @RequestBody CategoryDTO categoryDTO, BindingResult result) {
         if (result.hasErrors()) {
             List<String> errorMessages = result.getFieldErrors()
                     .stream()
                     .map(FieldError::getDefaultMessage)
                     .toList();
-            return ResponseEntity.badRequest().body(errorMessages);
+            return ResponseEntity.badRequest().body(
+                    CategoryResponse.builder()
+                            .message(localizationUtils.getLocalizedMessage(
+                                    MessageKeys.CREATE_CATEGORY_FAILED, errorMessages
+                            ))
+                            .build()
+            );
         }
         Category category = Category
                 .builder()
                 .name(categoryDTO.getName())
                 .build();
         Category categoryResponse = categoryService.createCategory(category);
-        return ResponseEntity.ok("insert category successfully");
+        return ResponseEntity.ok(
+                CategoryResponse.builder()
+                        .message(localizationUtils.getLocalizedMessage(MessageKeys.CREATE_CATEGORY_SUCCESS))
+                        .build()
+        );
     }
 
     @GetMapping
@@ -43,7 +55,7 @@ public class CategoryController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<?> updateCategory(
+    public ResponseEntity<CategoryResponse> updateCategory(
             @Valid @PathVariable Long id,
             @Valid @RequestBody CategoryDTO categoryDTO,
             BindingResult result
@@ -53,19 +65,33 @@ public class CategoryController {
                     .stream()
                     .map(FieldError::getDefaultMessage)
                     .toList();
-            return ResponseEntity.badRequest().body(errorMessages);
+            return ResponseEntity.badRequest().body(
+                    CategoryResponse.builder()
+                            .message(localizationUtils.getLocalizedMessage(
+                                    MessageKeys.CREATE_CATEGORY_FAILED, errorMessages
+                            ))
+                            .build()
+            );
         }
         Category category = Category
                 .builder()
                 .name(categoryDTO.getName())
                 .build();
         Category categoryResponse = categoryService.updateCategory(id, category);
-        return ResponseEntity.ok("update category successfully");
+        return ResponseEntity.ok(
+                CategoryResponse.builder()
+                        .message(localizationUtils.getLocalizedMessage(MessageKeys.UPDATE_CATEGORY_SUCCESS))
+                        .build()
+        );
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<?> deleteCategory(@Valid @PathVariable Long id) {
+    public ResponseEntity<CategoryResponse> deleteCategory(@Valid @PathVariable Long id) {
         categoryService.deleteCategory(id);
-        return ResponseEntity.ok("delete category successfully");
+        return ResponseEntity.ok(
+                CategoryResponse.builder()
+                        .message(localizationUtils.getLocalizedMessage(MessageKeys.DELETE_CATEGORY_SUCCESSFULLY))
+                        .build()
+        );
     }
 }

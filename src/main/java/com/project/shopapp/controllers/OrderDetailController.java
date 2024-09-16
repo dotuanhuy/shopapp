@@ -1,10 +1,13 @@
 package com.project.shopapp.controllers;
 
+import com.project.shopapp.components.LocalizationUtils;
 import com.project.shopapp.dtos.requests.OrderDetailDTO;
 import com.project.shopapp.dtos.responses.OrderDetailResponse;
 import com.project.shopapp.models.OrderDetail;
 import com.project.shopapp.services.OrderDetailService;
+import com.project.shopapp.utils.MessageKeys;
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -14,10 +17,10 @@ import java.util.List;
 
 @RestController
 @RequestMapping(path = "${api.prefix}/oder_details")
+@RequiredArgsConstructor
 public class OrderDetailController {
-
-    @Autowired
-    private OrderDetailService orderDetailService;
+    private final OrderDetailService orderDetailService;
+    private final LocalizationUtils localizationUtils;
 
     @PostMapping
     public ResponseEntity<?> createOrderDetail(@Valid @RequestBody OrderDetailDTO orderDetailDTO) {
@@ -74,7 +77,9 @@ public class OrderDetailController {
     public ResponseEntity<?> deleteOrderDetail(@Valid @PathVariable("id") Long id) {
         try {
             orderDetailService.deleteOrderDetail(id);
-            return ResponseEntity.status(HttpStatus.OK).body("delete order detail successfully");
+            return ResponseEntity.status(HttpStatus.OK).body(
+                    localizationUtils.getLocalizedMessage(MessageKeys.DELETE_ORDER_DETAIL_SUCCESSFULLY)
+            );
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
         }

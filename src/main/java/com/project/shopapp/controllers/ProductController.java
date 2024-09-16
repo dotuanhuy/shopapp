@@ -1,16 +1,17 @@
 package com.project.shopapp.controllers;
 
 import com.github.javafaker.Faker;
+import com.project.shopapp.components.LocalizationUtils;
 import com.project.shopapp.dtos.requests.ProductDTO;
 import com.project.shopapp.dtos.requests.ProductImageDTO;
 import com.project.shopapp.dtos.responses.ProductListResponse;
 import com.project.shopapp.dtos.responses.ProductResponse;
-import com.project.shopapp.exceptions.DataNotFoundException;
 import com.project.shopapp.models.Product;
 import com.project.shopapp.models.ProductImage;
 import com.project.shopapp.services.ProductService;
+import com.project.shopapp.utils.MessageKeys;
 import jakarta.validation.Valid;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -22,7 +23,6 @@ import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -34,13 +34,16 @@ import java.util.UUID;
 
 @RestController
 @RequestMapping(path = "${api.prefix}/products")
+@RequiredArgsConstructor
 public class ProductController {
-
-    @Autowired
-    private ProductService productService;
+    private final ProductService productService;
+    private final LocalizationUtils localizationUtils;
 
     @GetMapping
-    public ResponseEntity<ProductListResponse> getAllProducts(@RequestParam("page") int page, @RequestParam("limit") int limit) {
+    public ResponseEntity<ProductListResponse> getAllProducts(
+            @RequestParam("page") int page,
+            @RequestParam("limit") int limit
+    ) {
         PageRequest pageRequest = PageRequest.of(page, limit, Sort.by("createAt").descending());
         Page<ProductResponse> productPages = productService.getAllProducts(pageRequest);
         // Lấy tổng số trang
@@ -89,7 +92,9 @@ public class ProductController {
         Product productResponse = productService.getProductById(productId);
         List<ProductImage> productImages = new ArrayList<>();
         if (files.size() > ProductImage.MAXIMUM_IMAGES_PER_PRODUCT) {
-            return ResponseEntity.badRequest().body("You can only upload maximum 5 images");
+            return ResponseEntity.badRequest().body(
+                    localizationUtils.getLocalizedMessage(MessageKeys.UPLOAD_IMAGES_MAX_5)
+            );
         }
         if (!files.isEmpty()) {
             for (MultipartFile file : files) {
@@ -98,12 +103,16 @@ public class ProductController {
                 }
                 // Kiểm tra kích thước của file
                 if (file.getSize() > 10 * 1024 * 1024) {    // Kích thước > 10MB
-                    return ResponseEntity.status(HttpStatus.PAYLOAD_TOO_LARGE).body("File is too large! Maximum size is 10MB");
+                    return ResponseEntity.status(HttpStatus.PAYLOAD_TOO_LARGE).body(
+                            localizationUtils.getLocalizedMessage(MessageKeys.UPLOAD_IMAGES_FILE_LARGE)
+                    );
                 }
                 String contentType = file.getContentType();
                 // Kiểm tra định dạng của file có phải file ảnh không
                 if (contentType == null || !contentType.startsWith("image/")) {
-                    return ResponseEntity.status(HttpStatus.UNSUPPORTED_MEDIA_TYPE).body("File must be an image");
+                    return ResponseEntity.status(HttpStatus.UNSUPPORTED_MEDIA_TYPE).body(
+                            localizationUtils.getLocalizedMessage(MessageKeys.UPLOAD_IMAGES_FILE_MUST_BE_IMAGE)
+                    );
                 }
                 // Lưu file và cập nhật thumbnail trong DTO
                 String filename = storeFile(file);
