@@ -70,7 +70,11 @@ public class UserController {
         try {
             // Kiểm tra thông tin đăng nhập và sinh token
             // Trả về token trong response
-            String token = userService.login(userLoginDTO.getPhoneNumber(), userLoginDTO.getPassword());
+            String token = userService.login(
+                    userLoginDTO.getPhoneNumber(),
+                    userLoginDTO.getPassword(),
+                    userLoginDTO.getRoleId()
+            );
 
             return ResponseEntity.status(HttpStatus.OK).body(
                     LoginResponse.builder()

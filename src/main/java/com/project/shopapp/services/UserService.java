@@ -1,6 +1,7 @@
 package com.project.shopapp.services;
 
 import com.project.shopapp.components.JwtTokenUtils;
+import com.project.shopapp.components.LocalizationUtils;
 import com.project.shopapp.dtos.requests.UserDTO;
 import com.project.shopapp.exceptions.DataNotFoundException;
 import com.project.shopapp.exceptions.PermissionDenyException;
@@ -8,6 +9,7 @@ import com.project.shopapp.models.Role;
 import com.project.shopapp.models.User;
 import com.project.shopapp.repositories.RoleRepository;
 import com.project.shopapp.repositories.UserRepository;
+import com.project.shopapp.utils.MessageKeys;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -28,6 +30,7 @@ public class UserService implements IUserService{
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenUtils jwtTokenUtil;
     private final AuthenticationManager authenticationManager;
+    private final LocalizationUtils localizationUtils;
 
     @Override
     public User createUser(UserDTO userDTO) throws Exception {
@@ -60,19 +63,24 @@ public class UserService implements IUserService{
     }
 
     @Override
-    public String login(String phoneNumber, String password) throws Exception {
+    public String login(String phoneNumber, String password, Long roleId) throws Exception {
         Optional<User> optionalUser = userRepository.findByPhoneNumber(phoneNumber);
         if (optionalUser.isEmpty()) {
-            throw new DataNotFoundException("Invalid phone number or password");
+            throw new DataNotFoundException(MessageKeys.WRONG_PASSWORD_OR_PHONE);
         }
         User user = optionalUser.get();
 
         if (user.getFacebookAccountId() == 0 && user.getGoogleAccountId() == 0) {
             if (!passwordEncoder.matches(password, user.getPassword())) {
-                throw new BadCredentialsException("Wrong phone number or password");
+                throw new BadCredentialsException(MessageKeys.PASSWORD_NOT_MATCH);
             }
-
         }
+
+        Optional<Role> role = roleRepository.findById(roleId);
+        if (role.isEmpty() || !roleId.equals(user.getRole().getId())) {
+            throw new BadCredentialsException(localizationUtils.getLocalizedMessage(MessageKeys.ROLE_EXIST));
+        }
+
         UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(
                 phoneNumber,
                 password,
