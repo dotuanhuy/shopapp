@@ -4,6 +4,7 @@ import com.project.shopapp.dtos.requests.UserDTO;
 import com.project.shopapp.dtos.requests.UserLoginDTO;
 import com.project.shopapp.dtos.responses.LoginResponse;
 import com.project.shopapp.dtos.responses.RegisterResponse;
+import com.project.shopapp.models.Role;
 import com.project.shopapp.models.User;
 import com.project.shopapp.services.UserService;
 import com.project.shopapp.components.LocalizationUtils;
@@ -73,7 +74,7 @@ public class UserController {
             String token = userService.login(
                     userLoginDTO.getPhoneNumber(),
                     userLoginDTO.getPassword(),
-                    userLoginDTO.getRoleId()
+                    userLoginDTO.getRoleId() == null ? 1 : userLoginDTO.getRoleId()
             );
 
             return ResponseEntity.status(HttpStatus.OK).body(

@@ -1,36 +1,38 @@
 package com.project.shopapp.services;
 
+import com.project.shopapp.dtos.requests.CartItemDTO;
 import com.project.shopapp.dtos.requests.OrderDTO;
 import com.project.shopapp.dtos.responses.OrderResponse;
 import com.project.shopapp.exceptions.DataNotFoundException;
-import com.project.shopapp.models.Order;
-import com.project.shopapp.models.OrderStatus;
-import com.project.shopapp.models.User;
+import com.project.shopapp.models.*;
+import com.project.shopapp.repositories.OrderDetailRepository;
 import com.project.shopapp.repositories.OrderRepository;
+import com.project.shopapp.repositories.ProductRepository;
 import com.project.shopapp.repositories.UserRepository;
+import jakarta.transaction.Transactional;
+import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
 @Service
+@RequiredArgsConstructor
 public class OrderService implements IOrderService{
-
-    @Autowired
-    private OrderRepository orderRepository;
-
-    @Autowired
-    private UserRepository userRepository;
-
-    @Autowired
-    private ModelMapper modelMapper;
+    private final OrderRepository orderRepository;
+    private final UserRepository userRepository;
+    private final ModelMapper modelMapper;
+    private final ProductRepository productRepository;
+    private final OrderDetailRepository orderDetailRepository;
 
     @Override
-    public OrderResponse createOrder(OrderDTO orderDTO) throws Exception {
+    @Transactional
+    public Order createOrder(OrderDTO orderDTO) throws Exception {
         User user = userRepository.findById(orderDTO.getUserId())
                 .orElseThrow(() -> new DataNotFoundException("Cannot find user with id: " + orderDTO.getUserId()));
 
@@ -48,7 +50,33 @@ public class OrderService implements IOrderService{
         }
         order.setShippingDate(shippingDate);
         order.setActive(true);
-        return modelMapper.map(orderRepository.save(order), OrderResponse.class);
+        order.setTotalMoney(orderDTO.getTotalMoney());
+        orderRepository.save(order);
+
+        // Tao danh sach cac doi tuong OrderDetail tu cartItems
+        List<OrderDetail> orderDetails = new ArrayList<>();
+        for (CartItemDTO cartItemDTO: orderDTO.getCartItems()) {
+            OrderDetail orderDetail = new OrderDetail();
+            orderDetail.setOrder(order);
+
+            // Lay thong tin san pham tu cartItemDTO
+            Long productId = cartItemDTO.getProductId();
+            int quantity = cartItemDTO.getQuantity();
+
+            // check product ton tai khong
+            Product product = productRepository.findById(productId).orElseThrow(
+                    () -> new DataNotFoundException("Product not found with id: " + productId)
+            );
+
+            // Dat thong tin cho OrderDetail
+            orderDetail.setProduct(product);
+            orderDetail.setNumberOfProducts(quantity);
+            orderDetail.setPrice(product.getPrice());
+            orderDetail.setTotalMoney(orderDetail.getPrice() * orderDetail.getNumberOfProducts());
+            orderDetails.add(orderDetail);
+        }
+        orderDetailRepository.saveAll(orderDetails);
+        return order;
     }
 
     @Override
@@ -62,6 +90,7 @@ public class OrderService implements IOrderService{
     }
 
     @Override
+    @Transactional
     public OrderResponse updateOrder(Long id, OrderDTO orderDTO) throws DataNotFoundException {
         Order order = orderRepository.findById(id).orElseThrow(
                 () -> new DataNotFoundException("Cannot find order with id: " + id)
@@ -76,6 +105,7 @@ public class OrderService implements IOrderService{
     }
 
     @Override
+    @Transactional
     public void deleteOrder(Long id) throws DataNotFoundException {
         Order order = orderRepository.findById(id).orElseThrow(
                 () -> new DataNotFoundException("Cannot find order with id: " + id)

@@ -19,22 +19,17 @@ import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.parameters.P;
 import org.springframework.util.StringUtils;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
-import java.net.MalformedURLException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.UUID;
+import java.util.*;
 
 @RestController
 @RequestMapping(path = "${api.prefix}/products")
@@ -45,11 +40,13 @@ public class ProductController {
 
     @GetMapping
     public ResponseEntity<ProductListResponse> getAllProducts(
-            @RequestParam("page") int page,
-            @RequestParam("limit") int limit
+            @RequestParam(defaultValue = "") String keyword,
+            @RequestParam(defaultValue = "0", name = "category_id") Long categoryId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int limit
     ) {
         PageRequest pageRequest = PageRequest.of(page, limit, Sort.by("id").ascending());
-        Page<ProductResponse> productPages = productService.getAllProducts(pageRequest);
+        Page<ProductResponse> productPages = productService.getAllProducts(keyword, categoryId, pageRequest);
         // Lấy tổng số trang
         int totalPages = productPages.getTotalPages();
         List<ProductResponse> products = productPages.getContent();
@@ -63,7 +60,7 @@ public class ProductController {
     public ResponseEntity<?> getProductById(@PathVariable("id") Long id) {
         try {
             Product product = productService.getProductById(id);
-            return ResponseEntity.ok(ProductResponse.toProductResponse(product));
+            return ResponseEntity.ok(product);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
@@ -222,10 +219,25 @@ public class ProductController {
                 return ResponseEntity.ok().contentType(MediaType.IMAGE_JPEG).body(resource);
             }
             else {
-                return ResponseEntity.notFound().build();
+                return ResponseEntity.ok()
+                        .contentType(MediaType.IMAGE_JPEG)
+                        .body(new UrlResource(Paths.get("uploads/notfound.jpg").toUri()));
             }
         } catch (Exception e) {
             return ResponseEntity.notFound().build();
+        }
+    }
+
+    @GetMapping("/by-ids")
+    public ResponseEntity<?> findProductsByIds(@RequestParam("ids") String ids) {
+        try {
+            List<Long> productIds = Arrays.stream(ids.split(","))
+                    .map(Long::parseLong)
+                    .toList();
+            List<Product> products = productService.findProductsByIds(productIds);
+            return ResponseEntity.status(HttpStatus.OK).body(products);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
 }
